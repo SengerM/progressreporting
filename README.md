@@ -27,3 +27,5 @@ with TelegramProgressReporter(MAX_K, BOT_TOKEN, CHAT_ID, 'I am anxious about thi
 		reporter.update(1)
 		time.sleep(1)
 ```
+
+To create a Telegram bot you can follow any of the tutorials that are around. It should take not more than 10-20 minutes.
