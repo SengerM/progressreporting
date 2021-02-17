@@ -6,7 +6,7 @@ setuptools.setup(
 	author = "Matias H. Senger",
 	author_email = "m.senger@hotmail.com",
 	description = "Report the progress of loops via Telegram!",
-	url = "https://github.com/SengerM",
+	url = "https://github.com/SengerM/progressreporting",
 	packages = setuptools.find_packages(),
 	classifiers = [
 		"Programming Language :: Python :: 3",
