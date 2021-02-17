@@ -6,6 +6,21 @@ class TelegramProgressReporter:
 	"""
 	Usage example
 	-------------
+	
+	from progressreporting.TelegramProgressReporter import TelegramProgressReporter
+	import time
+
+	BOT_TOKEN = 'Token of your bot'
+	CHAT_ID = 'ID of the chat to which you want to send the updates'
+
+	MAX_K = 99
+
+	with TelegramProgressReporter(MAX_K, BOT_TOKEN, CHAT_ID, 'I am anxious about this loop') as reporter:
+		for k in range(MAX_K):
+			print(k)
+			reporter.update(1)
+			time.sleep(1)
+	
 	"""
 	def __init__(self, total: int, telegram_token: str, telegram_chat_id: str, title=None):
 		self._telegram_token = telegram_token
