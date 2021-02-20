@@ -28,4 +28,4 @@ with TelegramProgressReporter(MAX_K, BOT_TOKEN, CHAT_ID, 'I am anxious about thi
 		time.sleep(1)
 ```
 
-To create a Telegram bot you can follow any of the tutorials that are around. It should take not more than 10-20 minutes.
+To create a Telegram bot you can follow any of the tutorials that are around. To get the chat ID just talk to your bot, say "Hi", and then go to ```https://api.telegram.org/bot<YourBOTToken>/getUpdates```.
