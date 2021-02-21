@@ -1,6 +1,10 @@
 import datetime
 import warnings
 import requests
+try:
+	import humanize
+except ImportError:
+	raise ImportError('You need the "humanize" package, just run "pip install humanize".')
 
 class TelegramProgressReporter:
 	"""
@@ -47,11 +51,17 @@ class TelegramProgressReporter:
 			raise TypeError(f'<count> must be an integer number, received {count} of type {type(count)}.')
 		self._count += count
 		if hasattr(self, '_message_id'):
+			now = datetime.datetime.now()
+			expected_finish = self._start_time + (now-self._start_time)/self._count*self._total
 			message_string = f'{self._title}\n\n'
-			message_string += f'Started: {self._start_time.strftime("%Y-%m-%d %H:%M")}\n'
-			message_string += f'Expexted finish: {(self._start_time + (datetime.datetime.now()-self._start_time)/self._count*self._total).strftime("%Y-%m-%d %H:%M")}\n'
+			message_string += f'{self._start_time.strftime("%Y-%m-%d %H:%M")} | Started\n'
+			message_string += f'{expected_finish.strftime("%Y-%m-%d %H:%M")} | Expected finish\n'
+			message_string += f'{humanize.naturaltime(now-expected_finish)} | Remaining\n'
 			message_string += '\n'
 			message_string += f'{self._count}/{self._total}\n{int(self._count/self._total*100)} %'
+			message_string += '\n'
+			message_string += '\n'
+			message_string += f'Last update of this message: {now.strftime("%Y-%m-%d %H:%M")}'
 			try:
 				self.edit_message(
 					message_text = message_string,
@@ -69,7 +79,7 @@ class TelegramProgressReporter:
 			if self._count != self._total:
 				message_string += f'FINISHED WITHOUT REACHING 100 %\n\n'
 			message_string += f'Finished on {now.strftime("%Y-%m-%d %H:%M")}\n'
-			message_string += f'Total elapsed time: {(now-self._start_time)}\n'
+			message_string += f'Total elapsed time: {humanize.naturaldelta(now-self._start_time)}\n'
 			try:
 				self.edit_message(
 					message_text = message_string,
