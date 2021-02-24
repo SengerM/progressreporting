@@ -41,7 +41,7 @@ class TelegramProgressReporter:
 	
 	@property
 	def expected_finish_time(self):
-		return self._start_time + (self.now-self._start_time)/self._count*self._total
+		return self._start_time + (self.now-self._start_time)/self._count*self._total if self._count != 0 else None
 	
 	def __enter__(self):
 		try:
@@ -62,8 +62,12 @@ class TelegramProgressReporter:
 		if hasattr(self, '_message_id'):
 			message_string = f'{self._title}\n\n'
 			message_string += f'{self._start_time.strftime("%Y-%m-%d %H:%M")} | Started\n'
-			message_string += f'{self.expected_finish_time.strftime("%Y-%m-%d %H:%M")} | Expected finish\n'
-			message_string += f'{humanize.naturaltime(self.now-self.expected_finish_time)} | Remaining\n'
+			if self.expected_finish_time is not None:
+				message_string += f'{self.expected_finish_time.strftime("%Y-%m-%d %H:%M")} | Expected finish\n'
+				message_string += f'{humanize.naturaltime(self.now-self.expected_finish_time)} | Remaining\n'
+			else:
+				message_string += f'Unknown | Expected finish\n'
+				message_string += f'Unknown | Remaining\n'
 			message_string += '\n'
 			message_string += f'{self._count}/{self._total} | {int(self._count/self._total*100)} %'
 			message_string += '\n'
@@ -89,7 +93,8 @@ class TelegramProgressReporter:
 			message_string += f'Total elapsed time: {humanize.naturaldelta(self.now-self._start_time)}\n'
 			if self._count != self._total:
 				message_string += f'Percentage reached: {int(self._count/self._total*100)} %\n'
-				message_string += f'Expected missing time: {humanize.naturaldelta(self.now-self.expected_finish_time)}\n'
+				if self.expected_finish_time is not None:
+					message_string += f'Expected missing time: {humanize.naturaldelta(self.now-self.expected_finish_time)}\n'
 			try:
 				self.edit_message(
 					message_text = message_string,
