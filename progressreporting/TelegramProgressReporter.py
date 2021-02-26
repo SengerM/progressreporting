@@ -33,6 +33,7 @@ class TelegramProgressReporter:
 		if not isinstance(total, int):
 			raise TypeError(f'<total> must be an integer number, received {total} of type {type(total)}.')
 		self._total = total
+		self._session = requests.Session() # https://stackoverflow.com/questions/25239650/python-requests-speed-up-using-keep-alive
 	
 	
 	@property
@@ -115,7 +116,7 @@ class TelegramProgressReporter:
 			}
 		if reply_to_message_id is not None:
 			parameters['reply_to_message_id'] = str(int(reply_to_message_id))
-		response = requests.get(
+		response = self._session.get(
 			f'https://api.telegram.org/bot{self._telegram_token}/sendMessage',
 			data = parameters
 		)
@@ -123,7 +124,7 @@ class TelegramProgressReporter:
 
 	def edit_message(self, message_text, message_id):
 		# https://core.telegram.org/bots/api#editmessagetext
-		requests.post(
+		self._session.post(
 			f'https://api.telegram.org/bot{self._telegram_token}/editMessageText',
 			data = {
 				'chat_id': self._telegram_chat_id,
