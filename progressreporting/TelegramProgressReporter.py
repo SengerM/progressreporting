@@ -48,7 +48,7 @@ class TelegramProgressReporter:
 			response = self.send_message(f'Starting {self._title}...')
 			self._message_id = response['result']['message_id']
 		except Exception as e:
-			warnings.warn(f'Could not establish connection with Telegram to send the progress status. Reason: {e}')
+			warnings.warn(f'Could not establish connection with Telegram to send the progress status. Reason: {repr(e)}')
 		self._count = 0
 		self._start_time = self.now
 		return self
@@ -81,7 +81,7 @@ class TelegramProgressReporter:
 			except KeyboardInterrupt:
 				raise KeyboardInterrupt()
 			except Exception as e:
-				warnings.warn(f'Could not establish connection with Telegram to send the progress status. Reason: {e}')
+				warnings.warn(f'Could not establish connection with Telegram to send the progress status. Reason: {repr(e)}')
 	
 	def __exit__(self, exc_type, exc_value, exc_traceback):
 		
@@ -105,7 +105,7 @@ class TelegramProgressReporter:
 					reply_to_message_id = self._message_id,
 				)
 			except Exception as e:
-				warnings.warn(f'Could not establish connection with Telegram to send the progress status. Reason: {e}')
+				warnings.warn(f'Could not establish connection with Telegram to send the progress status. Reason: {repr(e)}')
 	
 	def send_message(self, message_text, reply_to_message_id=None):
 		# https://core.telegram.org/bots/api#sendmessage
