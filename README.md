@@ -28,4 +28,21 @@ with TelegramProgressReporter(MAX_K, BOT_TOKEN, CHAT_ID, 'I am anxious about thi
 		time.sleep(1)
 ```
 
-To create a Telegram bot you can follow any of the tutorials that are around. To get the chat ID just talk to your bot, say "Hi", and then go to ```https://api.telegram.org/bot<YourBOTToken>/getUpdates```.
+The program will send messages to your Telegram chat, below some examples:
+
+- Loop in progress. It sends a single message that is updated each time ```reporter.update(count)``` is called.
+
+![In progress...](pics/in_progress.png)
+
+- Loop completed. It sends a new message to notify it was completed.
+
+![Successful](pics/finished_success.png)
+
+- Loop finished but without reaching 100 % (e.g. because of an error). It sends a new message to notify and in the original message it reports that it did not reach 100 %.
+
+![Failed](pics/finished_but_failed.png)
+
+
+## Creating a bot
+
+To create a Telegram bot you can follow any of the tutorials that are around. To get the **chat ID** just talk to your bot, say "Hi", and then go to ```https://api.telegram.org/bot<YourBOTToken>/getUpdates```.
