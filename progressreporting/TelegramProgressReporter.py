@@ -89,7 +89,8 @@ class TelegramProgressReporter:
 			parameters['reply_to_message_id'] = str(int(reply_to_message_id))
 		response = self._session.get(
 			f'https://api.telegram.org/bot{self._telegram_token}/sendMessage',
-			data = parameters
+			data = parameters,
+			timeout = 2, # https://stackoverflow.com/a/21966169/8849755
 		)
 		return response.json()
 
@@ -101,7 +102,8 @@ class TelegramProgressReporter:
 				'chat_id': self._telegram_chat_id,
 				'text': message_text,
 				'message_id': str(message_id),
-			}
+			},
+			timeout = 2, # https://stackoverflow.com/a/21966169/8849755
 		)
 	
 	def set_completed(self):
