@@ -42,9 +42,9 @@ The program will send messages to your Telegram chat, below some examples:
 
 ![Failed](pics/finished_but_failed.png)
 
-### Example with fast loops
+### Forcing the report
 
-The process of sending a message to Telegram is relatively slow, it takes about 100-600 milli seconds. If you have a loop which takes less time in each iteration, you can do this:
+The process of sending a message to Telegram is relatively slow, it takes about 100-600 milli seconds. If you have a loop which takes less time in each iteration you don't want to make your program slower just because of the reporting. Thus, by default the ```TelegramProgressReporter``` will report every 10 seconds or more (you can change this time using the argument ```miminum_update_time_seconds```). If you want to force the report you can use the ```report``` method:
 
 ```Python
 from progressreporting.TelegramProgressReporter import TelegramProgressReporter
@@ -53,15 +53,15 @@ import time
 BOT_TOKEN = 'Token of your bot'
 CHAT_ID = 'ID of the chat to which you want to send the updates'
 
-MAX_K = 4444
+MAX_K = 44444
 with TelegramProgressReporter(MAX_K, BOT_TOKEN, CHAT_ID, 'With session') as reporter:
 	for k in range(MAX_K):
 		print(k)
 		time.sleep(.01)
-		reporter.count(1) # This method updates the count but does not report, thus it is very fast.
-		if k%444==0: reporter.report() # Every 444 loops we report (this is slow).
+		reporter.update(1) # This will not report every time it is called, only once 10 s have passed since the last report.
+		if 4444 < k < 5555: 
+			reporter.report() # This will force a report to Telegram.
 ```
-In this way the loop will still be fast and you will have updates every certain number of loops.
 
 ## Creating a bot
 

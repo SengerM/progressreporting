@@ -26,7 +26,7 @@ class TelegramProgressReporter:
 			time.sleep(1)
 	
 	"""
-	def __init__(self, total: int, telegram_token: str, telegram_chat_id: str, title=None):
+	def __init__(self, total: int, telegram_token: str, telegram_chat_id: str, title=None, miminum_update_time_seconds=10):
 		self._telegram_token = telegram_token
 		self._telegram_chat_id = telegram_chat_id
 		self._title = title if title is not None else ('Loop started on ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
@@ -34,6 +34,7 @@ class TelegramProgressReporter:
 			raise TypeError(f'<total> must be an integer number, received {total} of type {type(total)}.')
 		self._total = total
 		self._session = requests.Session() # https://stackoverflow.com/questions/25239650/python-requests-speed-up-using-keep-alive
+		self._minimum_update_time = datetime.timedelta(seconds=miminum_update_time_seconds)
 	
 	
 	@property
@@ -143,5 +144,9 @@ class TelegramProgressReporter:
 			raise RuntimeError(f'Before calling to <update> you should create a context using "with TelegramProgressBar(...) as reporter:".')
 		if not isinstance(count, int):
 			raise TypeError(f'<count> must be an integer number, received {count} of type {type(count)}.')
+		if not hasattr(self, '_last_update'):
+			self._last_update = datetime.datetime.now()
 		self.count(count)
-		self.report()
+		if datetime.datetime.now() - self._last_update >= self._minimum_update_time:
+			self.report()
+			self._last_update = datetime.datetime.now()
