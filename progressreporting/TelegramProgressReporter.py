@@ -17,16 +17,15 @@ class TelegramProgressReporter:
 	BOT_TOKEN = 'Token of your bot'
 	CHAT_ID = 'ID of the chat to which you want to send the updates'
 
-	MAX_K = 99
+	MAX_K = 99999
 
 	with TelegramProgressReporter(MAX_K, BOT_TOKEN, CHAT_ID, 'I am anxious about this loop') as reporter:
 		for k in range(MAX_K):
 			print(k)
 			reporter.update(1)
-			time.sleep(1)
 	
 	"""
-	def __init__(self, total: int, telegram_token: str, telegram_chat_id: str, title=None, miminum_update_time_seconds=10):
+	def __init__(self, total: int, telegram_token: str, telegram_chat_id: str, title=None, miminum_update_time_seconds=60):
 		self._telegram_token = telegram_token
 		self._telegram_chat_id = telegram_chat_id
 		self._title = title if title is not None else ('Loop started on ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
@@ -46,13 +45,13 @@ class TelegramProgressReporter:
 		return self._start_time + (self.now-self._start_time)/self._count*self._total if self._count != 0 else None
 	
 	def __enter__(self):
+		self._count = 0
+		self._start_time = self.now
 		try:
-			response = self.send_message(f'Starting {self._title}...')
+			response = self.send_message(f'Starting "{self._title}"...\nToday/now it is {self._start_time.strftime("%Y-%m-%d %H:%M")}\nThe next update of this message should be in {humanize.naturaldelta(self._minimum_update_time)}.')
 			self._message_id = response['result']['message_id']
 		except Exception as e:
 			warnings.warn(f'Could not establish connection with Telegram to send the progress status. Reason: {repr(e)}')
-		self._count = 0
-		self._start_time = self.now
 		return self
 		
 	def __exit__(self, exc_type, exc_value, exc_traceback):
@@ -90,7 +89,7 @@ class TelegramProgressReporter:
 		response = self._session.get(
 			f'https://api.telegram.org/bot{self._telegram_token}/sendMessage',
 			data = parameters,
-			timeout = 2, # https://stackoverflow.com/a/21966169/8849755
+			timeout = 1, # https://stackoverflow.com/a/21966169/8849755
 		)
 		return response.json()
 
@@ -103,7 +102,7 @@ class TelegramProgressReporter:
 				'text': message_text,
 				'message_id': str(message_id),
 			},
-			timeout = 2, # https://stackoverflow.com/a/21966169/8849755
+			timeout = 1, # https://stackoverflow.com/a/21966169/8849755
 		)
 	
 	def set_completed(self):
@@ -130,7 +129,8 @@ class TelegramProgressReporter:
 			message_string += f'{self._count}/{self._total} | {int(self._count/self._total*100)} %'
 			message_string += '\n'
 			message_string += '\n'
-			message_string += f'Last update of this message: {self.now.strftime("%Y-%m-%d %H:%M")}'
+			message_string += f'Last update of this message: {self.now.strftime("%Y-%m-%d %H:%M")}\n'
+			message_string += f'The next update of this message should be in {humanize.naturaldelta(self._minimum_update_time)}.'
 			try:
 				self.edit_message(
 					message_text = message_string,
