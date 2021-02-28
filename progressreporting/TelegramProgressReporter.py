@@ -116,30 +116,33 @@ class TelegramProgressReporter:
 		self._count += count
 	
 	def report(self):
-		if hasattr(self, '_message_id'):
-			message_string = f'{self._title}\n\n'
-			message_string += f'{self._start_time.strftime("%Y-%m-%d %H:%M")} | Started\n'
-			if self.expected_finish_time is not None:
-				message_string += f'{self.expected_finish_time.strftime("%Y-%m-%d %H:%M")} | Expected finish\n'
-				message_string += f'{humanize.naturaltime(self.now-self.expected_finish_time)} | Remaining\n'
-			else:
-				message_string += f'Unknown | Expected finish\n'
-				message_string += f'Unknown | Remaining\n'
-			message_string += '\n'
-			message_string += f'{self._count}/{self._total} | {int(self._count/self._total*100)} %'
-			message_string += '\n'
-			message_string += '\n'
-			message_string += f'Last update of this message: {self.now.strftime("%Y-%m-%d %H:%M")}\n'
-			message_string += f'The next update of this message should be in {humanize.naturaldelta(self._minimum_update_time)}.'
-			try:
+		message_string = f'{self._title}\n\n'
+		message_string += f'{self._start_time.strftime("%Y-%m-%d %H:%M")} | Started\n'
+		if self.expected_finish_time is not None:
+			message_string += f'{self.expected_finish_time.strftime("%Y-%m-%d %H:%M")} | Expected finish\n'
+			message_string += f'{humanize.naturaltime(self.now-self.expected_finish_time)} | Remaining\n'
+		else:
+			message_string += f'Unknown | Expected finish\n'
+			message_string += f'Unknown | Remaining\n'
+		message_string += '\n'
+		message_string += f'{self._count}/{self._total} | {int(self._count/self._total*100)} %'
+		message_string += '\n'
+		message_string += '\n'
+		message_string += f'Last update of this message: {self.now.strftime("%Y-%m-%d %H:%M")}\n'
+		message_string += f'The next update of this message should be in {humanize.naturaldelta(self._minimum_update_time)}.'
+		try:
+			if hasattr(self, '_message_id'): # This should be the standard case, unless the message could not be sent in the __enter__ method.
 				self.edit_message(
 					message_text = message_string,
 					message_id = self._message_id,
 				)
-			except KeyboardInterrupt:
-				raise KeyboardInterrupt()
-			except Exception as e:
-				warnings.warn(f'Could not establish connection with Telegram to send the progress status. Reason: {repr(e)}')
+			else: # If there was a problem in the __enter__ method while sending the message, let's send it now so later on we can edit it.
+				response = self.send_message(message_string)
+				self._message_id = response['result']['message_id']
+		except KeyboardInterrupt:
+			raise KeyboardInterrupt()
+		except Exception as e:
+			warnings.warn(f'Could not establish connection with Telegram to send the progress status. Reason: {repr(e)}')
 	
 	def update(self, count: int):
 		if not hasattr(self, '_count'):
