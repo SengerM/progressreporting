@@ -19,21 +19,22 @@ class TelegramProgressReporter:
 
 	MAX_K = 99999
 
-	with TelegramProgressReporter(MAX_K, BOT_TOKEN, CHAT_ID, 'I am anxious about this loop') as reporter:
+	with TelegramProgressReporter(MAX_K, BOT_TOKEN, CHAT_ID, 'This is a long loop') as reporter:
 		for k in range(MAX_K):
 			print(k)
+			time.sleep(0.01)
 			reporter.update(1)
 	
 	"""
-	def __init__(self, total: int, telegram_token: str, telegram_chat_id: str, title=None, miminum_update_time_seconds=60):
+	def __init__(self, total: int, telegram_token: str, telegram_chat_id: str, loop_name=None, miminum_update_time_seconds=60):
 		self._telegram_token = telegram_token
 		self._telegram_chat_id = telegram_chat_id
-		self._title = title if title is not None else ('Loop started on ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
+		self._title = loop_name if loop_name is not None else ('loop started on ' + self.now.strftime("%Y-%m-%d %H:%M"))
 		if not isinstance(total, int):
 			raise TypeError(f'<total> must be an integer number, received {total} of type {type(total)}.')
 		self._total = total
 		self._session = requests.Session() # https://stackoverflow.com/questions/25239650/python-requests-speed-up-using-keep-alive
-		self._minimum_update_time = datetime.timedelta(seconds=miminum_update_time_seconds)
+		self._minimum_update_time = datetime.timedelta(seconds=float(miminum_update_time_seconds))
 	
 	
 	@property
