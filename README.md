@@ -1,6 +1,8 @@
 # progressreporting
 
-Report the progress of long time lasting ```for``` and ```while``` loops to your cell phone using a Telegram bot.
+Report the progress of long time lasting loops (e.g. ```for``` and ```while```) to your cell phone/computer using a Telegram bot.
+
+Tested on Ubuntu, Windows and Raspberri Pi!
 
 ## Installation
 
@@ -10,7 +12,7 @@ pip3 install git+https://github.com/SengerM/progressreporting
 
 ## Usage example
 
-The following example shows the best way to use the ```TelegramProgressReporter``` with a loop. The ```with``` statement ensures that the inizialization and finalization is done properly. Also, if for some reason the messages cannot be sent (e.g. the internet connection is temporarily lost) a warning is displayed but the program keeps running. When the connection is restored, the updates are sent.
+The following example shows the best way to use the ```TelegramProgressReporter``` to report the progress of a loop. The ```with``` statement ensures that the inizialization and finalization is done properly (you'll be properly notified in the begining and the ending of the loop, despite there is an error or not). 
 
 ```Python
 from progressreporting.TelegramProgressReporter import TelegramProgressReporter
@@ -35,13 +37,13 @@ The program will automatically send messages to your Telegram chat, below some e
 
 ![Successful](pics/finished_success.png)
 
-- Loop finished but without reaching 100 % (e.g. because of an error). It sends a new message to notify and in the original message it reports that it did not reach 100 %.
+- Loop finished but without reaching 100 % (e.g. because of an error in your code or some problem). It sends a new message to notify and in the original message it reports that it did not reach 100 %.s
 
 ![Failed](pics/finished_but_failed.png)
 
 ### Forcing the report
 
-The process of sending a message to Telegram is relatively slow, it takes about 100-600 milli seconds. If you have a loop which takes less time in each iteration you don't want to make your program slower just because of the reporting messages. Thus, by default the ```TelegramProgressReporter``` will report every 60 seconds (you can change this time using the argument ```miminum_update_time_seconds```). If by some reason you want to force the report you can use the ```report``` method:
+The process of sending a message to Telegram is relatively slow, it takes about 100-600 milli seconds. If you have a loop which takes less time in each iteration you don't want to make your program slower just because of the reporting messages. Thus, by default the ```TelegramProgressReporter``` will report every 60 seconds (you can change this time using the argument ```miminum_update_time_seconds```). If for some reason you want to force the report you can use the ```report``` method:
 
 ```Python
 from progressreporting.TelegramProgressReporter import TelegramProgressReporter
@@ -59,10 +61,11 @@ with TelegramProgressReporter(MAX_K, BOT_TOKEN, CHAT_ID, 'With session') as repo
 		if 4444 < k < 5555: 
 			reporter.report() # This will force a report to Telegram. Of course reporting in each loop will make it considerably slower so this is not recommended.
 ```
+Note that it is always recomended to use the ```update``` method.
 
 ## Error handling
 
-The ```TelegramProgressReporter``` raises no errors at all. Consider, for example, that you started yesterday a loop that will last until tomorrow, and today you lost the internet connection for 10 minutes. You don't want the program to crash because of this stupidity. Luckily, you don't have to worry because the only thing that ```TelegramProgressReporter``` will do is to display a warning, but the program will continue running. When the connection is restored so it will the reporting.
+The ```TelegramProgressReporter``` raises no errors at all. Consider, for example, that you started yesterday a loop that will last until tomorrow, and today you lost the internet connection for 10 minutes and the updates cannot be sent to your Telegram bot. You don't want the program to crash because of this stupidity. You don't have to worry because the only thing that ```TelegramProgressReporter``` will do is to display a warning, but the program will continue to run. When the connection is restored so it will the reporting.
 
 ## Creating a bot
 
