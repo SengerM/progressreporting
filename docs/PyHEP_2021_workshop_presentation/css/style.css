@@ -1,0 +1,15 @@
+ul.spaced, ol.spaced {
+	margin: 44px;
+}
+ul.spaced li, ol.spaced li {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+table.spaced {
+	margin-top: 55px;
+	margin-bottom: 55px;
+}
+#title_link:link, #title_link:visited, #title_link:hover, #title_link:active {
+	color: inherit !important;
+	text-decoration: none;
+}

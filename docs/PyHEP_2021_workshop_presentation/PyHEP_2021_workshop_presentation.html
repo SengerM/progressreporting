@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Easily report the progress of a program to your mobile</title>
+	
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1"> <!-- This fixes the problem of small font (some texts and also the math) in mobile devices, see https://stackoverflow.com/a/35564095/8849755 -->
+	<link rel="stylesheet" href="https://sengerm.github.io/html-academic-publishing/css_and_scripts/style.css">
+	<link rel="stylesheet" href="css/style.css">
+	<!-- Math support https://www.mathjax.org/#gettingstarted -->
+    <script>
+	MathJax = {
+	  tex: {
+		inlineMath: [['$', '$'], ['\\(', '\\)']]
+	  },
+	  svg: {
+		fontCache: 'global'
+	  }
+	};
+	</script>
+	<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+	<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+	<link href="css/prism.css" rel="stylesheet" />
+</head>
+
+<body>
+
+<presentation_display_block>
+
+<div id="document_title"></div>
+
+<author affiliation="PhD student at Universität Zürich">Matías Senger</author>
+
+<div id="presentation_header">
+	<a href="https://indico.cern.ch/event/1019958/"><image id="PyHEP_logo" src="media/PyHEP_logo.svg"></image></a>
+	<span id="presenter"><a href="https://msenger.web.cern.ch/">Matías Senger</a></span>
+	<span id="date">July&nbsp;5<sup>th</sup> 2021</span>
+</div>
+
+</presentation_display_block>
+<presentation_display_block>
+
+<!--
+<div id="table-of-contents">
+	<h2 class="unnumbered">Contents</h2>
+</div>
+-->
+
+<h1>Motivation</h1>
+
+<p>Some processes in the lab are repetitive (just a <code>for</code> loop) and take a lot of time.</p>
+
+<p>Example: A 2D laser scan on an R&amp;D silicon detector:</p>
+
+<img src="media/1.svg" style="width: 100%; max-width: 666px;"/>
+
+<ul>
+	<li>Move the laser to a point.
+		<ul>
+			<li>Shine one pulse.</li>
+			<li>Measure the response of the detector.</li>
+			<li>Process the measurement.</li>
+			<li>Save the measured data.</li>
+			<li>Repeat this 100 times in this point.</li>
+		</ul>
+	</li>
+	<li>Move to the next point and do the same...</li>
+</ul>
+
+<p>This process can go from a few minutes up to <b>a couple of weeks</b> &#128561;.</p>
+
+</presentation_display_block>
+<presentation_display_block>
+
+<p>It would be nice to:
+	<ul class="spaced">
+		<li>Have an estimation on when will it end.</li>
+		<li>Be able to check the progress in real time.</li>
+		<li>Get notified if some problem occurs.</li>
+	</ul>
+All this can be trivially implemented in Python. But it would be nice to have <b>all this information available worldwide in your mobile/computer</b>.
+</p>
+
+<p>A simple <a href="https://core.telegram.org/bots">Telegram bot</a> can do the job!</p>
+
+</presentation_display_block>
+<presentation_display_block>
+
+<h1>A simple solution</h1>
+
+<p>Simple yet effective pure Python package (<a href="https://github.com/SengerM/progressreporting">link</a>) that sends notifications to a Telegram conversation:</p>
+
+<a href="https://github.com/SengerM/progressreporting"><image src="media/2.svg" style="max-width: 100%;"></image></a>
+
+</presentation_display_block>
+<presentation_display_block>
+
+<h2>Usage</h2>
+
+<ol>
+	<li>Install with <code>pip install git+https://github.com/SengerM/progressreporting</code>.</li>
+	<li>Import.</li>
+	<li>Create a <code>reporter</code> object.</li>
+	<li>Update the progress once per loop.</li>
+</ol>
+
+<pre><code class="block language-py">from progressreporting.TelegramProgressReporter import TelegramProgressReporter
+
+MAX_K = 99999
+
+with TelegramProgressReporter(
+	total = MAX_K, 
+	telegram_token = 'token of your bot', 
+	telegram_chat_id = 'ID of the chat to send the messages', 
+	loop_name = 'Optional loop name'): 
+as reporter:
+	for k in range(MAX_K):
+		# Do some stuff...
+		reporter.update(1) # 1 means 1/MAX_K completed.</code></pre>
+
+</presentation_display_block>
+<presentation_display_block>
+
+<p>The <code>reporter</code> will:
+	<ul>
+		<li>Send a message to the chat when it enters the <code>with</code> context.</li>
+		<li>Estimate when will it finished.</li>
+		<li>Update the original message in the chat as the loop goes on.</li>
+		<li>Send a new message when it goes out of the <code>with</code> context stating if there was an error or not.</li>
+	</ul>
+
+The <code>reporter</code> will <b>not</b>:
+	<ul>
+		<li>Raise any error. Your program will never crash due to the reporter.</li>
+		<li>Hang or make your program slower.</li>
+		<li>Spam your Telegram chat with hundreds of messages, just 2 messages per loop: At the start and at the end.</li>
+		<li>Print anything in your terminal. Your terminal stays clean!</li>
+	</ul>
+
+You will:
+	<ul>
+		<li>Get released of having to check whether things are still going on.</li>
+		<li>Know when the program ends.</li>
+	</ul>
+</p>
+
+</presentation_display_block>
+<presentation_display_block>
+
+<image src="media/3.svg" style="max-height: 100vh; max-width: 100%;"></image>
+
+</presentation_display_block>
+<presentation_display_block>
+
+<h1>Conclusions</h1>
+
+<!--
+<div id="references_list">
+	<h1 class="unnumbered">References</h1>
+	<reference id="Reference: _____">Bla bla bla.</reference>
+</div>
+-->
+
+<!--
+<div id="footnotes_list">
+	<h1 class="unnumbered">Footnotes</h2>
+</div>
+-->
+
+</presentation_display_block>
+
+<script src="https://sengerm.github.io/html-academic-publishing/css_and_scripts/script.js"></script>
+<script src="https://sengerm.github.io/html-academic-publishing/css_and_scripts/authors.js"></script>
+<script src="https://sengerm.github.io/html-academic-publishing/css_and_scripts/presentation_display_block/presentation_display_block.js"></script>
+<link rel="stylesheet" href="https://sengerm.github.io/html-academic-publishing/css_and_scripts/presentation_display_block/presentation_display_block.css">
+<script src="js/header.js"></script>
+<link rel="stylesheet" href="css/header.css">
+<script src="js/prism.js"></script>
+</body>
+
+</html>
