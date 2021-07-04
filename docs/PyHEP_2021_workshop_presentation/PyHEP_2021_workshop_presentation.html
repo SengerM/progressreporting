@@ -98,12 +98,21 @@ All this can be trivially implemented in Python. But it would be nice to have <b
 
 <h2>Usage</h2>
 
-<ol>
-	<li>Install with <code>pip install git+https://github.com/SengerM/progressreporting</code>.</li>
-	<li>Import.</li>
-	<li>Create a <code>reporter</code> object.</li>
-	<li>Update the progress once per loop.</li>
-</ol>
+<ul>
+	<li>One time steps:
+	<ul>
+		<li>Install with <code>pip install git+https://github.com/SengerM/progressreporting</code>. (Or clone it wherever you want and <code>pip install -e &lt;path></code>.)</li>
+		<li><a href="https://core.telegram.org/bots#3-how-do-i-create-a-bot">Create a Telegram bot</a>.</li>
+	</ul>
+	</li>
+	<li>Regular usage steps:
+		<ol>
+			<li>Import.</li>
+			<li>Create a <code>reporter</code> object.</li>
+			<li>Update the progress once per loop.</li>
+		</ol>
+	</li>
+</ul>
 
 <pre><code class="block language-py">from progressreporting.TelegramProgressReporter import TelegramProgressReporter
 
@@ -148,12 +157,31 @@ You will:
 </presentation_display_block>
 <presentation_display_block>
 
+<p>Run first example!</p>
+
+</presentation_display_block>
+<presentation_display_block>
+
 <image src="media/3.svg" style="max-height: 100vh; max-width: 100%;"></image>
 
 </presentation_display_block>
 <presentation_display_block>
 
+<p>Run the rest of the examples.</p>
+
+</presentation_display_block>
+<presentation_display_block>
+
 <h1>Conclusions</h1>
+
+<p>Presented a simple pure Python package that reports the progress of a loop to a Telegram chat using a bot.</p>
+
+<ul class="spaced">
+	<li>Real time updates to your Telegram account: Mobile app, desktop app or web app.</li>
+	<li>Effortless: Just 3 extra lines of code.</li>
+	<li>Safe: Does not rises any errors.</li>
+	<li>Releases you to check whether the program is still running; more time to worry about important stuff!</li>
+</ul>
 
 <!--
 <div id="references_list">
