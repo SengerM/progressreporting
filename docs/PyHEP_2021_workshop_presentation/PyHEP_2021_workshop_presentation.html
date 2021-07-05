@@ -62,7 +62,7 @@
 			<li>Measure the response of the detector.</li>
 			<li>Process the measurement.</li>
 			<li>Save the measured data.</li>
-			<li>Repeat this 100 times in this point.</li>
+			<li>Repeat this many times in this point.</li>
 		</ul>
 	</li>
 	<li>Move to the next point and do the same...</li>
@@ -76,10 +76,10 @@
 <p>It would be nice to:
 	<ul class="spaced">
 		<li>Have an estimation on when will it end.</li>
-		<li>Be able to check the progress in real time.</li>
-		<li>Get notified if some problem occurs.</li>
+		<li>Be able to check the progress in real time without having to go there.</li>
+		<li>Get notified when it finishes or if some problem occurs.</li>
 	</ul>
-All this can be trivially implemented in Python. But it would be nice to have <b>all this information available worldwide in your mobile/computer</b>.
+Furthermore, it would be nice to have <b>all this information available worldwide in your mobile/computer</b> by adding just <b>3 lines of code</b> to your script.
 </p>
 
 <p>A simple <a href="https://core.telegram.org/bots">Telegram bot</a> can do the job!</p>
@@ -98,14 +98,14 @@ All this can be trivially implemented in Python. But it would be nice to have <b
 
 <h2>Usage</h2>
 
-<ul>
+<ul class="spaced">
 	<li>One time steps:
 	<ul>
 		<li>Install with <code>pip install git+https://github.com/SengerM/progressreporting</code>. (Or clone it wherever you want and <code>pip install -e &lt;path></code>.)</li>
 		<li><a href="https://core.telegram.org/bots#3-how-do-i-create-a-bot">Create a Telegram bot</a>.</li>
 	</ul>
 	</li>
-	<li>Regular usage steps:
+	<li>Regular usage steps (3 lines of code &#128526;):
 		<ol>
 			<li>Import.</li>
 			<li>Create a <code>reporter</code> object.</li>
@@ -149,7 +149,7 @@ The <code>reporter</code> will <b>not</b>:
 
 You will:
 	<ul>
-		<li>Get released of having to check whether things are still going on.</li>
+		<li>Get released of having to check whether things are still going on. 🏖️🏝️</li>
 		<li>Know when the program ends.</li>
 	</ul>
 </p>
@@ -157,7 +157,7 @@ You will:
 </presentation_display_block>
 <presentation_display_block>
 
-<p>Run first example!</p>
+<p>Run first example and come back!</p>
 
 </presentation_display_block>
 <presentation_display_block>
@@ -182,6 +182,8 @@ You will:
 	<li>Safe: Does not rises any errors.</li>
 	<li>Releases you to check whether the program is still running; more time to worry about important stuff!</li>
 </ul>
+
+<p>Tested on Windows, Linux and Raspberry Pi.</p>
 
 <!--
 <div id="references_list">
