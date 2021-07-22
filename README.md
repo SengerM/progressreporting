@@ -60,27 +60,9 @@ with TelegramProgressReporter(MAX_K, 'token of your bot', 'ID of the chat to sen
 ```
 The `warn` method will send a new message notifying the warning. Don't worry if the `warn` method is called thousands of times per second. If this happens, there is an internal mechanism to register all these warnings and send them all packed together to the chat in a single compact message, to avoid spamming. The time after which warnings are collected and sent is specified by `minimum_warn_time_seconds` when creating the `TelegramProgressReporter` object, and by default is 5 minutes.
 
-### Forcing the report
+### Further examples
 
-The process of sending a message to Telegram is relatively slow, it takes about 100-600 milli seconds. If you have a loop which takes less time in each iteration you don't want to make your program slower just because of the reporting messages. Thus, by default the ```TelegramProgressReporter``` will report every 60 seconds (you can change this time using the argument ```miminum_update_time_seconds```). If for some reason you want to force the report you can use the ```report``` method:
-
-```Python
-from progressreporting.TelegramProgressReporter import TelegramProgressReporter
-import time
-
-BOT_TOKEN = 'Token of your bot'
-CHAT_ID = 'ID of the chat to which you want to send the updates'
-
-MAX_K = 44444
-with TelegramProgressReporter(MAX_K, BOT_TOKEN, CHAT_ID, 'With session') as reporter:
-	for k in range(MAX_K):
-		print(k)
-		time.sleep(.01)
-		reporter.update(1) # This will not report every time it is called, only after 60 s have passed since the last report.
-		if 4444 < k < 5555: 
-			reporter.report() # This will force a report to Telegram. Of course reporting in each loop will make it considerably slower so this is not recommended.
-```
-Note that it is always recomended to use the ```update``` method.
+See the [examples directory](examples) for further examples.
 
 ## Error handling
 
