@@ -41,6 +41,25 @@ The program will automatically send messages to your Telegram chat, below some e
 
 ![Failed](pics/finished_but_failed.png)
 
+### Notifying warnings
+
+Sometimes some condition happens that is not enough to stop your program but you deserve to know about it. So it is not an error but a warning. The `TelegramProgressReporter` supports sending warnings, just proceed as follows:
+```Python
+from progressreporting.TelegramProgressReporter import TelegramProgressReporter
+import time
+
+MAX_K = 99999
+
+with TelegramProgressReporter(MAX_K, 'token of your bot', 'ID of the chat to send the messages', 'This is a long loop') as reporter:
+	for k in range(MAX_K):
+		print(k)
+		time.sleep(0.01)
+		if k == 1111:
+			reporter.warn('k is 1111! This is not too dangerous, but please pay attention.')
+		reporter.update(1)
+```
+The `warn` method will send a new message notifying the warning. Don't worry if the `warn` method is called thousands of times per second. If this happens, there is an internal mechanism to register all these warnings and send them all packed together to the chat in a single compact message, to avoid spamming. The time after which warnings are collected and sent is specified by `minimum_warn_time_seconds` when creating the `TelegramProgressReporter` object, and by default is 5 minutes.
+
 ### Forcing the report
 
 The process of sending a message to Telegram is relatively slow, it takes about 100-600 milli seconds. If you have a loop which takes less time in each iteration you don't want to make your program slower just because of the reporting messages. Thus, by default the ```TelegramProgressReporter``` will report every 60 seconds (you can change this time using the argument ```miminum_update_time_seconds```). If for some reason you want to force the report you can use the ```report``` method:
