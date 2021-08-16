@@ -41,6 +41,10 @@ The program will automatically send messages to your Telegram chat, below some e
 
 ![Failed](pics/finished_but_failed.png)
 
+- Examples that lasted several days until completion:
+
+![](pics/Screenshot_2021-08-16_22-22-56.png)
+
 ### Notifying warnings
 
 Sometimes some condition happens that is not enough to stop your program but you deserve to know about it. So it is not an error but a warning. The `TelegramProgressReporter` supports sending warnings, just proceed as follows:
