@@ -160,14 +160,29 @@ class TelegramProgressReporter(TelegramReporter):
 		self._within_context = False
 	
 	def set_completed(self):
+		"""Sets the total number of iterations as complete, even if the
+		count is not yet complete. This method should be used when you
+		break a loop intentionally by some reason and you still want to
+		inform that it was completed successfully. Example:
+		for k in range(99):
+			if k == 10:
+				reporter.set_completed() # Indicate that even though k is not yet 99, the loop was completed successfully.
+				break
+			reporter.update(1)"""
 		if self._within_context == False:
 			raise RuntimeError(f'This method must be called from inside a context, i.e. inside a `with` statement.')
 		self._count = self._total_iterations
 	
 	def count(self, count):
+		"""This method increases the count of the loop by certain amount
+		and does not report anything to the Telegram chat, unless after
+		increasing the count it becomes higher than the total iterations
+		informed when creating the object."""
 		if self._within_context == False:
 			raise RuntimeError(f'This method must be called from inside a context, i.e. inside a `with` statement.')
 		self._count += count
+		if self._count > self._total_iterations:
+			self.warn(f'The iterations count has surpassed the number of iterations expected. The number of iterations expected was {self._total_iterations} and now I have already counted {self._count} iterations.')
 	
 	def report(self):
 		"""This is the method that actually sends a report to the Telegram
