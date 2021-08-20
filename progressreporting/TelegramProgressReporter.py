@@ -29,7 +29,7 @@ class TelegramProgressReporter:
 	def __init__(self, total: int, telegram_token: str, telegram_chat_id: str, loop_name=None, miminum_update_time_seconds=60, minimum_warn_time_seconds=60*5):
 		self._telegram_token = telegram_token
 		self._telegram_chat_id = telegram_chat_id
-		self._title = loop_name if loop_name is not None else ('loop started on ' + self.now.strftime("%Y-%m-%d %H:%M"))
+		self._title = loop_name if loop_name is not None else ('loop started on ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
 		if not isinstance(total, int):
 			raise TypeError(f'<total> must be an integer number, received {total} of type {type(total)}.')
 		self._total = total
@@ -37,18 +37,13 @@ class TelegramProgressReporter:
 		self._minimum_update_time = datetime.timedelta(seconds=float(miminum_update_time_seconds))
 		self._minimum_warn_time = datetime.timedelta(seconds=float(minimum_warn_time_seconds))
 	
-	
-	@property
-	def now(self):
-		return datetime.datetime.now()
-	
 	@property
 	def expected_finish_time(self):
-		return self._start_time + (self.now-self._start_time)/self._count*self._total if self._count != 0 else None
+		return self._start_time + (datetime.datetime.now()-self._start_time)/self._count*self._total if self._count != 0 else None
 	
 	def __enter__(self):
 		self._count = 0
-		self._start_time = self.now
+		self._start_time = datetime.datetime.now()
 		try:
 			response = self.send_message(f'Starting "{self._title}"...\nToday/now it is {self._start_time.strftime("%Y-%m-%d %H:%M")}\nThe next update of this message should be in {humanize.naturaldelta(self._minimum_update_time)}.')
 			self._message_id = response['result']['message_id']
@@ -62,12 +57,12 @@ class TelegramProgressReporter:
 			message_string = f'{self._title}\n\n'
 			if self._count != self._total:
 				message_string += f'FINISHED WITHOUT REACHING 100 %\n\n'
-			message_string += f'Finished on {self.now.strftime("%Y-%m-%d %H:%M")}\n'
-			message_string += f'Total elapsed time: {humanize.naturaldelta(self.now-self._start_time)}\n'
+			message_string += f'Finished on {datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}\n'
+			message_string += f'Total elapsed time: {humanize.naturaldelta(datetime.datetime.now()-self._start_time)}\n'
 			if self._count != self._total:
 				message_string += f'Percentage reached: {int(self._count/self._total*100)} %\n'
 				if self.expected_finish_time is not None:
-					message_string += f'Expected missing time: {humanize.naturaldelta(self.now-self.expected_finish_time)}\n'
+					message_string += f'Expected missing time: {humanize.naturaldelta(datetime.datetime.now()-self.expected_finish_time)}\n'
 			try:
 				self.edit_message(
 					message_text = message_string,
@@ -125,7 +120,7 @@ class TelegramProgressReporter:
 		message_string += f'{self._start_time.strftime("%Y-%m-%d %H:%M")} | Started\n'
 		if self.expected_finish_time is not None:
 			message_string += f'{self.expected_finish_time.strftime("%Y-%m-%d %H:%M")} | Expected finish\n'
-			message_string += f'{humanize.naturaltime(self.now-self.expected_finish_time)} | Remaining\n'
+			message_string += f'{humanize.naturaltime(datetime.datetime.now()-self.expected_finish_time)} | Remaining\n'
 		else:
 			message_string += f'Unknown | Expected finish\n'
 			message_string += f'Unknown | Remaining\n'
@@ -133,7 +128,7 @@ class TelegramProgressReporter:
 		message_string += f'{self._count}/{self._total} | {int(self._count/self._total*100)} %'
 		message_string += '\n'
 		message_string += '\n'
-		message_string += f'Last update of this message: {self.now.strftime("%Y-%m-%d %H:%M")}\n'
+		message_string += f'Last update of this message: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}\n'
 		message_string += f'The next update of this message should be in {humanize.naturaldelta(self._minimum_update_time)}.'
 		try:
 			if hasattr(self, '_message_id'): # This should be the standard case, unless the message could not be sent in the __enter__ method.
