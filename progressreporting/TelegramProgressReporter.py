@@ -73,12 +73,12 @@ class TelegramReporter:
 			timeout = 1, # https://stackoverflow.com/a/21966169/8849755
 		)
 	
-	def report_for_loop(self, total, loop_name=None, miminum_update_time_seconds=60, minimum_warn_time_seconds=60):
+	def report_for_loop(self, total_iterations, loop_name=None, miminum_update_time_seconds=60, minimum_warn_time_seconds=60):
 		"""Creates an instance of TelegramProgressReporter and returns it
 		to use inside a `with` statement, using the same Telegram token
 		and chat id."""
 		return TelegramProgressReporter(
-			total = total, 
+			total_iterations = total_iterations, 
 			telegram_token = self._telegram_token, 
 			telegram_chat_id = self._telegram_chat_id, 
 			loop_name = loop_name, 
@@ -87,7 +87,7 @@ class TelegramReporter:
 		)
 
 class TelegramProgressReporter(TelegramReporter):
-	def __init__(self, total: int, telegram_token: str, telegram_chat_id: str, loop_name=None, miminum_update_time_seconds=60, minimum_warn_time_seconds=60):
+	def __init__(self, total_iterations: int, telegram_token: str, telegram_chat_id: str, loop_name=None, miminum_update_time_seconds=60, minimum_warn_time_seconds=60):
 		"""
 		Usage example
 		-------------
@@ -112,16 +112,16 @@ class TelegramProgressReporter(TelegramReporter):
 			telegram_chat_id = telegram_chat_id,
 		)
 		self._title = loop_name if loop_name is not None else ('loop started on ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
-		if not isinstance(total, int):
-			raise TypeError(f'<total> must be an integer number, received {total} of type {type(total)}.')
-		self._total = total
+		if not isinstance(total_iterations, int):
+			raise TypeError(f'<total_iterations> must be an integer number, received object of type {type(total_iterations)}.')
+		self._total_iterations = total_iterations
 		self._minimum_update_time = datetime.timedelta(seconds=float(miminum_update_time_seconds))
 		self._minimum_warn_time = datetime.timedelta(seconds=float(minimum_warn_time_seconds))
 		self._within_context = False
 	
 	@property
 	def expected_finish_time(self):
-		return self._start_time + (datetime.datetime.now()-self._start_time)/self._count*self._total if self._count != 0 else None
+		return self._start_time + (datetime.datetime.now()-self._start_time)/self._count*self._total_iterations if self._count != 0 else None
 	
 	def __enter__(self):
 		self._count = 0
@@ -138,12 +138,12 @@ class TelegramProgressReporter(TelegramReporter):
 		self._send_warnings() # If there are warnings accumulated, sent them.
 		if hasattr(self, '_message_id'):
 			message_string = f'{self._title}\n\n'
-			if self._count != self._total:
+			if self._count != self._total_iterations:
 				message_string += f'FINISHED WITHOUT REACHING 100 %\n\n'
 			message_string += f'Finished on {datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}\n'
 			message_string += f'Total elapsed time: {humanize.naturaldelta(datetime.datetime.now()-self._start_time)}\n'
-			if self._count != self._total:
-				message_string += f'Percentage reached: {int(self._count/self._total*100)} %\n'
+			if self._count != self._total_iterations:
+				message_string += f'Percentage reached: {int(self._count/self._total_iterations*100)} %\n'
 				if self.expected_finish_time is not None:
 					message_string += f'Expected missing time: {humanize.naturaldelta(datetime.datetime.now()-self.expected_finish_time)}\n'
 			try:
@@ -162,7 +162,7 @@ class TelegramProgressReporter(TelegramReporter):
 	def set_completed(self):
 		if self._within_context == False:
 			raise RuntimeError(f'This method must be called from inside a context, i.e. inside a `with` statement.')
-		self._count = self._total
+		self._count = self._total_iterations
 	
 	def count(self, count):
 		if self._within_context == False:
@@ -184,7 +184,7 @@ class TelegramProgressReporter(TelegramReporter):
 			message_string += f'Unknown | Expected finish\n'
 			message_string += f'Unknown | Remaining\n'
 		message_string += '\n'
-		message_string += f'{self._count}/{self._total} | {int(self._count/self._total*100)} %'
+		message_string += f'{self._count}/{self._total_iterations} | {int(self._count/self._total_iterations*100)} %'
 		message_string += '\n'
 		message_string += '\n'
 		message_string += f'Last update of this message: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}\n'
@@ -280,30 +280,3 @@ class TelegramProgressReporter(TelegramReporter):
 				raise KeyboardInterrupt()
 			except Exception as e:
 				warnings.warn(f'Could not establish connection with Telegram to send the warnings. Reason: {repr(e)}')
-
-if __name__ == '__main__':
-	from data_processing_bureaucrat.Bureaucrat import TelegramReportingInformation
-	from time import sleep
-	
-	MAX_K = 999
-	
-	with TelegramProgressReporter(
-		MAX_K, 
-		TelegramReportingInformation().token, 
-		TelegramReportingInformation().chat_id, 
-		f'Testing the TelegramProgressReporter class',
-		miminum_update_time_seconds = 22, 
-		minimum_warn_time_seconds = 11,
-	) as reporter:
-		for k in range(MAX_K):
-			sleep(60*2/MAX_K)
-			if k in {111,112}:
-				reporter.warn('This warning should be notified two times, in two different messages.')
-			if 222 < k < 333:
-				reporter.warn("A very repetitive warning! Don't worry, you will not be spammed. They will be all collected in a small number of messages.")
-			if k == 444:
-				reporter.warn("Now I will report many different warnings at the same time.")
-				reporter.warn("All these warnings will be collected in one message.")
-				reporter.warn("Well, it may be in two messages. Because the first warning will be sent immediately, and the next warnings will be collected and sent later on. This, however, will depend on the time elapsed since the previous warning report and the <minimum_warn_time_seconds> passed when creating the TelegramProgressReporter.")
-				reporter.warn("This is the last warning, I promise.")
-			reporter.update(1)
