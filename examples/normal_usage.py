@@ -4,7 +4,7 @@ from time import sleep
 
 reporter = TelegramReporter(
 	telegram_token = TelegramReportingInformation().token, # Here I store the token of my bot hidden, never make it public.
-	telegram_chat_id = '-529438836',
+	telegram_chat_id = TelegramReportingInformation().chat_id,
 )
 
 reporter.send_message('Send whatever message you like.')
