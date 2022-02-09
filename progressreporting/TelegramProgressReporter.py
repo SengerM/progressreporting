@@ -127,7 +127,7 @@ class TelegramProgressReporter(TelegramReporter):
 		self._count = 0
 		self._start_time = datetime.datetime.now()
 		try:
-			response = self.send_message(f'Starting "{self._title}"...\nToday/now it is {self._start_time.strftime("%Y-%m-%d %H:%M")}\nThe next update of this message should be in {humanize.naturaldelta(self._minimum_update_time)}.')
+			response = self.send_message(f'🕰️ Starting "{self._title}"...\nToday/now it is {self._start_time.strftime("%Y-%m-%d %H:%M")}\nThe next update of this message should be in {humanize.naturaldelta(self._minimum_update_time)}.')
 			self._message_id = response['result']['message_id']
 		except Exception as e:
 			warnings.warn(f'Could not establish connection with Telegram to send the progress status. Reason: {repr(e)}')
@@ -139,7 +139,9 @@ class TelegramProgressReporter(TelegramReporter):
 		if hasattr(self, '_message_id'):
 			message_string = f'{self._title}\n\n'
 			if self._count != self._total_iterations:
-				message_string += f'FINISHED WITHOUT REACHING 100 %\n\n'
+				message_string += f'💥 FINISHED WITHOUT REACHING 100 %\n\n'
+			else:
+				message_string = '✅ ' + message_string
 			message_string += f'Finished on {datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}\n'
 			message_string += f'Total elapsed time: {humanize.naturaldelta(datetime.datetime.now()-self._start_time)}\n'
 			if self._count != self._total_iterations:
@@ -190,7 +192,7 @@ class TelegramProgressReporter(TelegramReporter):
 		reason you want to force the report."""
 		if self._within_context == False:
 			raise RuntimeError(f'This method must be called from inside a context, i.e. inside a `with` statement.')
-		message_string = f'{self._title}\n\n'
+		message_string = f'🕰️ {self._title}\n\n'
 		message_string += f'{self._start_time.strftime("%Y-%m-%d %H:%M")} | Started\n'
 		if self.expected_finish_time is not None:
 			message_string += f'{self.expected_finish_time.strftime("%Y-%m-%d %H:%M")} | Expected finish\n'
