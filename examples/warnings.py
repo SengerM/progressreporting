@@ -1,14 +1,17 @@
-from progressreporting.TelegramProgressReporter import TelegramProgressReporter
-from data_processing_bureaucrat.Bureaucrat import TelegramReportingInformation # Here I hide the token of my bot. Never make it public.
+from progressreporting.TelegramProgressReporter import TelegramReporter
+import my_telegram_bots # Here I keep the info from my bots, never make it public!
 from time import sleep
 import numpy as np
 
 MAX_K = 999
 TOTAL_LOOP_TIME = 20*60 # Seconds, this is 20 minutes.
-TOKEN = TelegramReportingInformation().token # Replace this line with the token of your bot.
-CHAT_ID = TelegramReportingInformation().chat_id # Replace this line with the chat_id to which you want to send the information.
 
-with TelegramProgressReporter(MAX_K, TOKEN,	CHAT_ID, f'Testing warnings') as reporter:
+reporter = TelegramReporter(
+	telegram_token = my_telegram_bots.robobot.token,
+	telegram_chat_id = my_telegram_bots.chat_ids['Robobot beta setup'],
+)
+
+with reporter.report_for_loop(MAX_K,'Testing warnings') as reporter:
 	for k in range(MAX_K):
 		sleep(TOTAL_LOOP_TIME/MAX_K) # Here you would do some stuff, I will just sleep..
 		if k in {111,112}:
