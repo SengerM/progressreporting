@@ -138,7 +138,7 @@ class TelegramProgressReporter(TelegramReporter):
 		self._send_warnings() # If there are warnings accumulated, sent them.
 		if hasattr(self, '_message_id'):
 			message_string = f'{self._title}\n\n'
-			if self._count != self._total_iterations:
+			if self._count < self._total_iterations:
 				message_string += f'💥 FINISHED WITHOUT REACHING 100 %\n\n'
 			else:
 				message_string = '✅ ' + message_string
