@@ -5,12 +5,12 @@ from time import sleep
 reporter = SafeTelegramReporter4Loops(
 	bot_token = my_telegram_bots.robobot.token,
 	chat_id = my_telegram_bots.chat_ids['Robobot TCT setup'],
+	parse_mode = 'Markdown',
 )
 
-reporter.send_message('TESTING!!!')
-reporter.send_message('Send whatever message you like.')
-reporter.send_message('It is safe to send messages with this method because it will not raise any error if the message cannot be sent (e.g. cause the internet connection is down), so your program will not crash. It will just show a warning.')
-reporter.send_message('This method has to be used to send individual messages, but you are responsible for not putting this into a `for` loop to avoid spamming your Telegram chat. Also, Telegram will temporarily block the bot if they detect you are sending too much messages, so be careful.')
+reporter.send_message('Send whatever message you like. 😃')
+reporter.send_message('It is safe to send messages with this method because *it will not raise any error* if the message cannot be sent (e.g. cause the internet connection is down), so your program will not crash. It will __just show a warning__.')
+reporter.send_message('If you use `reporter.send_message` then *you are responsible* for not putting this into a `for` loop *to avoid spamming* your Telegram chat. Also, *Telegram will temporarily block the bot* if they detect you are sending too much messages, so be careful. The safe method to avoid this is `reporter.warn`.')
 
 MAX_K = 999
 TOTAL_LOOP_TIME = 60 # Seconds, this is 5 minutes.
