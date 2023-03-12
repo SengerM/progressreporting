@@ -132,6 +132,37 @@ class SafeTelegramReporter4Loops(SafeTelegramReporter):
 		self._minimum_warn_time = datetime.timedelta(seconds=minimum_warn_time_seconds)
 		return self
 	
+	def report_subloop(self, total_loop_iterations:int, loop_name:str=None, miminum_update_time_seconds:float=60, minimum_warn_time_seconds:float=60):
+		"""Creates a new instance of `SafeTelegramReporter4Loops` which
+		will answer to the current instance and configures it to report
+		a loop, i.e. it calls the method `report_loop` on the new instance
+		upon creation.
+		
+		Arguments
+		---------
+		See `SafeTelegramReporter4Loops.report_loop`.
+		
+		Returns
+		-------
+		subreporter: SafeTelegramReporter4Loops
+			A new instance that will handle the subloop.
+		"""
+		if not self._now_reporting:
+			raise RuntimeError('You can only report a subloop if you are already reporting a loop!')
+		subreporter = SafeTelegramReporter4Loops(
+			bot_token = self._bot_token,
+			chat_id = self._chat_id,
+			reply_to_message_id = self._message_id_reporting_loop_progress if hasattr(self, '_message_id_reporting_loop_progress') else None,
+			default_parameters = self._default_parameters,
+		)
+		subreporter.report_loop(
+			total_loop_iterations = total_loop_iterations, 
+			loop_name = loop_name, 
+			miminum_update_time_seconds = miminum_update_time_seconds, 
+			minimum_warn_time_seconds = minimum_warn_time_seconds
+		)
+		return subreporter
+	
 	@property
 	def expected_finish_time(self):
 		return self._start_time + (datetime.datetime.now()-self._start_time)/self._count*self._total_iterations if self._count != 0 and self._now_reporting==True else None
