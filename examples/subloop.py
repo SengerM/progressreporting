@@ -6,6 +6,7 @@ import numpy
 reporter = SafeTelegramReporter4Loops(
 	bot_token = my_telegram_bots.robobot.token,
 	chat_id = my_telegram_bots.chat_ids['Robobot TCT setup'],
+	parse_mode = 'Markdown',
 )
 
 n_iterations = 9
@@ -17,6 +18,6 @@ with reporter.report_loop(n_iterations,'Main loop',20):
 			for n2 in range(n_subiterations):
 				sleep(subloop_time/n_subiterations)
 				if n2 == int(n_subiterations/2):
-					subloop_reporter.warn(f'n2 = {n2}!')
+					subloop_reporter.warn(f'n2 = {n2}! *This is important*.')
 				subloop_reporter.update(1)
 		reporter.update(1) # This line tells the reporter that one iteration has been completed, and automatically sends the updates once per minute to the Telegram chat.
