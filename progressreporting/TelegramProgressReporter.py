@@ -16,7 +16,6 @@ def send_message(requests_session:requests.Session, bot_token:str, **parameters)
 		Any of the parameters specified in the API, see here https://core.telegram.org/bots/api#sendmessage.
 		The most relevant are the `chat_id` and `text`.
 	"""
-	# https://core.telegram.org/bots/api#sendmessage
 	response = requests_session.get(
 		f'https://api.telegram.org/bot{bot_token}/sendMessage',
 		data = parameters,
@@ -168,6 +167,8 @@ class SafeTelegramReporter4Loops(SafeTelegramReporter):
 		return self._start_time + (datetime.datetime.now()-self._start_time)/self._count*self._total_iterations if self._count != 0 and self._now_reporting==True else None
 	
 	def __enter__(self):
+		if self._now_reporting == True:
+			raise RuntimeError(f'This instance is already reporting a loop named {repr(self._title)}, cannot report another loop before this one is finished.')
 		self._count = 0
 		self._start_time = datetime.datetime.now()
 		try:
@@ -284,7 +285,7 @@ class SafeTelegramReporter4Loops(SafeTelegramReporter):
 		if not isinstance(count, int):
 			raise TypeError(f'<count> must be an integer number, received object of type {type(count)}.')
 		if not hasattr(self, '_last_update'):
-			self._last_update = datetime.datetime.now()
+			self._last_update = datetime.datetime.now() - 2*self._minimum_update_time
 		self.count(count)
 		if datetime.datetime.now() - self._last_update >= self._minimum_update_time:
 			self.report()
