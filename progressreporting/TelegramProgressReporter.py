@@ -152,7 +152,7 @@ class SafeTelegramReporter4Loops(SafeTelegramReporter):
 			bot_token = self._bot_token,
 			chat_id = self._chat_id,
 			reply_to_message_id = self._message_id_reporting_loop_progress if hasattr(self, '_message_id_reporting_loop_progress') else None,
-			default_parameters = self._default_parameters,
+			**self._default_parameters,
 		)
 		subreporter.report_loop(
 			total_loop_iterations = total_loop_iterations, 
