@@ -1,165 +1,183 @@
 import datetime
 import warnings
 import requests
-try:
-	import humanize
-except ImportError:
-	raise ImportError('You need the "humanize" package, just run "pip install humanize".')
+import humanize
 
-class TelegramReporter:
-	def __init__(self, telegram_token: str, telegram_chat_id: str):
-		self._telegram_token = telegram_token
-		self._telegram_chat_id = telegram_chat_id
+def send_message(requests_session:requests.Session, bot_token:str, **parameters):
+	"""Send a message.
+	
+	Arguments
+	---------
+	requests_session: requests.Session
+		An instance handling the session.
+	bot_token: str
+		The token of the bot to use, e.g. `'123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11'`.
+	**parameters:
+		Any of the parameters specified in the API, see here https://core.telegram.org/bots/api#sendmessage.
+		The most relevant are the `chat_id` and `text`.
+	"""
+	# https://core.telegram.org/bots/api#sendmessage
+	response = requests_session.get(
+		f'https://api.telegram.org/bot{bot_token}/sendMessage',
+		data = parameters,
+		timeout = 1, # https://stackoverflow.com/a/21966169/8849755
+	)
+	return response.json()
+
+def edit_message(requests_session:requests.Session, bot_token:str, **parameters):
+	"""Edit a message that was previously sent.
+	
+	Arguments
+	---------
+	requests_session: requests.Session
+		An instance handling the session.
+	bot_token: str
+		The token of the bot to use, e.g. `'123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11'`.
+	**parameters:
+		Any of the parameters specified in the API, see here hthttps://core.telegram.org/bots/api#editmessagetexttps://core.telegram.org/bots/api#editmessagetext.
+		The most relevant are the `chat_id` and `text`.
+	"""
+	requests_session.post(
+		f'https://api.telegram.org/bot{bot_token}/editMessageText',
+		data = parameters,
+		timeout = 1, # https://stackoverflow.com/a/21966169/8849755
+	)
+
+class SafeTelegramReporter:
+	"""A class that allows to send messages without raising any error,
+	only warnings."""
+	def __init__(self, bot_token:str, chat_id:str, **default_parameters):
+		"""
+		Arguments
+		---------
+		bot_token: str
+			The token of the bot to use, e.g. `'123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11'`.
+		chat_id: str
+			The ID of the chat to which to send the messages to.
+		default_parameters:
+			Any extra parameter that will be used by default, unless overridden 
+			when calling the methods. See options in https://core.telegram.org/bots/api#sendmessage.
+		"""
+		self._bot_token = bot_token
+		self._chat_id = chat_id
+		self._default_parameters = default_parameters
 		self._session = requests.Session() # https://stackoverflow.com/questions/25239650/python-requests-speed-up-using-keep-alive
 	
-	def send_message(self, message_text, reply_to_message_id=None):
-		"""Send a message in a safe manner, in the sense that this method
-		will not raise any error at all. In case it cannot send the message
-		e.g. because the internet connection is temporarily down it will
-		only display a warning."""
-		try:
-			return self._send_message(str(message_text), reply_to_message_id)
-		except KeyboardInterrupt:
-			# If someone presses "ctrl+c" it is because he wants to interrupt the program.
-			raise KeyboardInterrupt()
-		except Exception as e:
-			# Any other exception that may happen due to sending the message (e.g. internet connection is out) we don't want to crash the program.
-			warnings.warn(f'Could not send message to Telegram, reason: {repr(e)}.')
-	
-	def edit_message(self, message_text, message_id):
-		"""Edit a message in a safe manner, in the sense that this method
-		will not raise any error at all. In case it cannot send the message
-		e.g. because the internet connection is temporarily down it will
-		only display a warning."""
-		try:
-			return self._edit_message(str(message_text), message_id)
-		except KeyboardInterrupt:
-			# If someone presses "ctrl+c" it is because he wants to interrupt the program.
-			raise KeyboardInterrupt()
-		except Exception as e:
-			# Any other exception that may happen due to sending the message (e.g. internet connection is out) we don't want to crash the program.
-			warnings.warn(f'Could not send message to Telegram, reason: {repr(e)}.')
-	
-	def _send_message(self, message_text, reply_to_message_id=None):
-		"""This is the method that actually sends the messages. It is not
-		safe in the sense that if it cannot send the message it will raise
-		an error, making you responsible of handling this error."""
-		# https://core.telegram.org/bots/api#sendmessage
-		parameters = {
-				'chat_id': self._telegram_chat_id,
-				'text': message_text,
-			}
-		if reply_to_message_id is not None:
-			parameters['reply_to_message_id'] = str(int(reply_to_message_id))
-		response = self._session.get(
-			f'https://api.telegram.org/bot{self._telegram_token}/sendMessage',
-			data = parameters,
-			timeout = 1, # https://stackoverflow.com/a/21966169/8849755
-		)
-		return response.json()
-
-	def _edit_message(self, message_text, message_id):
-		"""This is the method that actually edits the messages. It is not
-		safe in the sense that if it cannot send the message it will raise
-		an error, making you responsible of handling this error."""
-		# https://core.telegram.org/bots/api#editmessagetext
-		self._session.post(
-			f'https://api.telegram.org/bot{self._telegram_token}/editMessageText',
-			data = {
-				'chat_id': self._telegram_chat_id,
-				'text': message_text,
-				'message_id': str(message_id),
-			},
-			timeout = 1, # https://stackoverflow.com/a/21966169/8849755
-		)
-	
-	def report_for_loop(self, total_iterations, loop_name=None, miminum_update_time_seconds=60, minimum_warn_time_seconds=60):
-		"""Creates an instance of TelegramProgressReporter and returns it
-		to use inside a `with` statement, using the same Telegram token
-		and chat id."""
-		return TelegramProgressReporter(
-			total_iterations = total_iterations, 
-			telegram_token = self._telegram_token, 
-			telegram_chat_id = self._telegram_chat_id, 
-			loop_name = loop_name, 
-			miminum_update_time_seconds = miminum_update_time_seconds, 
-			minimum_warn_time_seconds = minimum_warn_time_seconds,
-		)
-
-class TelegramProgressReporter(TelegramReporter):
-	def __init__(self, total_iterations: int, telegram_token: str, telegram_chat_id: str, loop_name=None, miminum_update_time_seconds=60, minimum_warn_time_seconds=60):
-		"""
-		Usage example
-		-------------
+	def send_message(self, text:str, **parameters):
+		"""Send a message, any error will be converted into a warning.
 		
-		from progressreporting.TelegramProgressReporter import TelegramProgressReporter
-		import time
-
-		BOT_TOKEN = 'Token of your bot'
-		CHAT_ID = 'ID of the chat to which you want to send the updates'
-
-		MAX_K = 99999
-
-		with TelegramProgressReporter(MAX_K, BOT_TOKEN, CHAT_ID, 'This is a long loop') as reporter:
-			for k in range(MAX_K):
-				print(k)
-				time.sleep(0.01)
-				reporter.update(1)
-		
+		Arguments
+		---------
+		text: str
+			The text you want to send.
+		**parameters:
+			Additional arguments to be passed to the Telegram API, see https://core.telegram.org/bots/api#sendmessage.
 		"""
+		try:
+			return send_message(requests_session=self._session, bot_token=self._bot_token, chat_id=self._chat_id, text=text, **{**self._default_parameters,**parameters})
+		except Exception as e:
+			warnings.warn(f'Could not send message to Telegram, reason: {repr(e)}. ')
+	
+	def edit_message(self, text:str, message_id, **parameters):
+		"""Edit a message, any error will be converted into a warning.
+		
+		Arguments
+		---------
+		text: str
+			The text you want to send.
+		message_id:
+			The ID of the message you want to edit.
+		**parameters:
+			Additional arguments to be passed to the Telegram API, see https://core.telegram.org/bots/api#sendmessage.
+		"""
+		try:
+			return edit_message(requests_session=self._session, bot_token=self._bot_token, chat_id=self._chat_id, text=text, message_id=message_id, **{**self._default_parameters,**parameters})
+		except Exception as e:
+			warnings.warn(f'Could not edit message in Telegram, reason: {repr(e)}.')
+	
+class SafeTelegramReporter4Loops(SafeTelegramReporter):
+	def __init__(self, bot_token:str, chat_id:str, **default_parameters):
 		super().__init__(
-			telegram_token = telegram_token,
-			telegram_chat_id = telegram_chat_id,
+			bot_token = bot_token,
+			chat_id = chat_id,
+			**default_parameters,
 		)
-		self._title = loop_name if loop_name is not None else ('loop started on ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
-		if not isinstance(total_iterations, int):
-			raise TypeError(f'<total_iterations> must be an integer number, received object of type {type(total_iterations)}.')
-		self._total_iterations = total_iterations
-		self._minimum_update_time = datetime.timedelta(seconds=float(miminum_update_time_seconds))
-		self._minimum_warn_time = datetime.timedelta(seconds=float(minimum_warn_time_seconds))
-		self._within_context = False
+		self._now_reporting = False
+	
+	def report_loop(self, total_loop_iterations:int, loop_name:str=None, miminum_update_time_seconds:float=60, minimum_warn_time_seconds:float=60):
+		"""Configure the object to report a loop.
+		
+		Arguments
+		---------
+		total_loop_iterations: int
+			Total number of loop iterations expected.
+		loop_name: str, optional
+			An optional name for the loop. If not provided a default
+			name with a timestamp will be created.
+		miminum_update_time_seconds: float, default 60
+			Minimum time to wait before sending updated to the chat. If
+			this value is too small (say 1 second) then the bot will be
+			able to send one message every second with the risk of spamming
+			the chat and being temporarily disabled by Telegram so be careful.
+			With 60 seconds it works fine for most applications.
+		minimum_warn_time_seconds: float, default 60
+			Minimum time for sending warnings. The same as for `miminum_update_time_seconds`
+			holds if this value is too small.
+		"""
+		self._title = loop_name if loop_name is not None else ('Loop started on ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
+		if not isinstance(total_loop_iterations, int):
+			raise TypeError(f'`total_loop_iterations` must be an integer, received object of type {type(total_loop_iterations)}.')
+		self._total_iterations = total_loop_iterations
+		self._minimum_update_time = datetime.timedelta(seconds=miminum_update_time_seconds)
+		self._minimum_warn_time = datetime.timedelta(seconds=minimum_warn_time_seconds)
+		return self
 	
 	@property
 	def expected_finish_time(self):
-		return self._start_time + (datetime.datetime.now()-self._start_time)/self._count*self._total_iterations if self._count != 0 else None
+		return self._start_time + (datetime.datetime.now()-self._start_time)/self._count*self._total_iterations if self._count != 0 and self._now_reporting==True else None
 	
 	def __enter__(self):
 		self._count = 0
 		self._start_time = datetime.datetime.now()
 		try:
-			response = self.send_message(f'🕰️ Starting "{self._title}"...\nToday/now it is {self._start_time.strftime("%Y-%m-%d %H:%M")}\nThe next update of this message should be in {humanize.naturaldelta(self._minimum_update_time)}.')
-			self._message_id = response['result']['message_id']
+			response = self.send_message(
+				f'🕰️ Starting "{self._title}"...\nToday/now it is {self._start_time.strftime("%Y-%m-%d %H:%M")}\nThe next update of this message should be in {humanize.naturaldelta(self._minimum_update_time)} or the time it takes for the loop to complete one iteration, whatever happens first.'
+			)
+			self._message_id_reporting_loop_progress = response['result']['message_id']
 		except Exception as e:
 			warnings.warn(f'Could not establish connection with Telegram to send the progress status. Reason: {repr(e)}')
-		self._within_context = True
+		self._now_reporting = True
 		return self
 		
 	def __exit__(self, exc_type, exc_value, exc_traceback):
-		self._send_warnings() # If there are warnings accumulated, sent them.
-		if hasattr(self, '_message_id'):
+		try:
+			self._send_warnings(force=True) # If there are warnings accumulated, sent them.
+			
 			message_string = f'{self._title}\n\n'
 			if self._count < self._total_iterations:
 				message_string += f'💥 FINISHED WITHOUT REACHING 100 %\n\n'
+				message_string += f'Reason: {repr(exc_value)}\n\n'
 			else:
 				message_string = '✅ ' + message_string
 			message_string += f'Finished on {datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}\n'
 			message_string += f'Total elapsed time: {humanize.naturaldelta(datetime.datetime.now()-self._start_time)}\n'
 			if self._count != self._total_iterations:
-				message_string += f'Percentage reached: {int(self._count/self._total_iterations*100)} %\n'
+				message_string += f'Progress: {self._count} iterations ({int(self._count/self._total_iterations*100)} %)\n'
 				if self.expected_finish_time is not None:
 					message_string += f'Expected missing time: {humanize.naturaldelta(datetime.datetime.now()-self.expected_finish_time)}\n'
-			try:
-				self.edit_message(
-					message_text = message_string,
-					message_id = self._message_id,
-				)
-				self.send_message(
-					message_text = 'Finished!',
-					reply_to_message_id = self._message_id,
-				)
-			except Exception as e:
-				warnings.warn(f'Could not establish connection with Telegram to send the progress status. Reason: {repr(e)}')
-		self._within_context = False
+			
+			self.edit_message(
+				text = message_string,
+				message_id = self._message_id_reporting_loop_progress,
+			)
+			self.send_message(
+				text = 'Finished!',
+				reply_to_message_id = self._message_id_reporting_loop_progress,
+			)
+		except Exception as e:
+			warnings.warn(f'Could not establish connection with Telegram to send the progress status. Reason: {repr(e)}')
+		finally:
+			self._now_reporting = False
 	
 	def set_completed(self):
 		"""Sets the total number of iterations as complete, even if the
@@ -171,7 +189,7 @@ class TelegramProgressReporter(TelegramReporter):
 				reporter.set_completed() # Indicate that even though k is not yet 99, the loop was completed successfully.
 				break
 			reporter.update(1)"""
-		if self._within_context == False:
+		if self._now_reporting == False:
 			raise RuntimeError(f'This method must be called from inside a context, i.e. inside a `with` statement.')
 		self._count = self._total_iterations
 	
@@ -180,7 +198,7 @@ class TelegramProgressReporter(TelegramReporter):
 		and does not report anything to the Telegram chat, unless after
 		increasing the count it becomes higher than the total iterations
 		informed when creating the object."""
-		if self._within_context == False:
+		if self._now_reporting == False:
 			raise RuntimeError(f'This method must be called from inside a context, i.e. inside a `with` statement.')
 		self._count += count
 		if self._count > self._total_iterations:
@@ -190,7 +208,7 @@ class TelegramProgressReporter(TelegramReporter):
 		"""This is the method that actually sends a report to the Telegram
 		chat. Normally you should not call this method, unless for some 
 		reason you want to force the report."""
-		if self._within_context == False:
+		if self._now_reporting == False:
 			raise RuntimeError(f'This method must be called from inside a context, i.e. inside a `with` statement.')
 		message_string = f'🕰️ {self._title}\n\n'
 		message_string += f'{self._start_time.strftime("%Y-%m-%d %H:%M")} | Started\n'
@@ -207,29 +225,30 @@ class TelegramProgressReporter(TelegramReporter):
 		message_string += f'Last update of this message: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M")}\n'
 		message_string += f'The next update of this message should be in {humanize.naturaldelta(self._minimum_update_time)}.'
 		try:
-			if hasattr(self, '_message_id'): # This should be the standard case, unless the message could not be sent in the __enter__ method.
+			if hasattr(self, '_message_id_reporting_loop_progress'): # This should be the standard case, unless the message could not be sent in the __enter__ method.
 				self.edit_message(
-					message_text = message_string,
-					message_id = self._message_id,
+					text = message_string,
+					message_id = self._message_id_reporting_loop_progress,
 				)
 			else: # If there was a problem in the __enter__ method while sending the message, let's send it now so later on we can edit it.
 				response = self.send_message(message_string)
-				self._message_id = response['result']['message_id']
-		except KeyboardInterrupt:
-			raise KeyboardInterrupt()
+				self._message_id_reporting_loop_progress = response['result']['message_id']
 		except Exception as e:
 			warnings.warn(f'Could not establish connection with Telegram to send the progress status. Reason: {repr(e)}')
 	
-	def update(self, count: int):
-		"""Call this method regularly within the loop to update the status.
-		<count> is an integer number telling how many loops were completed. 
-		If you call this once per loop (the usual way) you should use <count=1>.
-		If for some reason you skip N loops (handling some error or something) 
-		then you should call <count=N>.
-		When calling this method, updates are automatically sent to the 
+	def update(self, count:int):
+		"""Update the progress of the loop and automatically report to the
 		Telegram chat.
-		This method will send the warnings too, in case they are accumulated."""
-		if self._within_context == False:
+		
+		Arguments
+		---------
+		count: int
+			Number of loops to add to the count. Normally you call this
+			method once per loop iteration and so `count=1` should be
+			the correct value. If you call this method once every `N`
+			iterations, then you have to use `count=N`.
+		"""
+		if self._now_reporting == False:
 			raise RuntimeError(f'This method must be called from inside a context, i.e. inside a `with` statement.')
 		if not isinstance(count, int):
 			raise TypeError(f'<count> must be an integer number, received object of type {type(count)}.')
@@ -241,20 +260,22 @@ class TelegramProgressReporter(TelegramReporter):
 			self._last_update = datetime.datetime.now()
 		self._send_warnings()
 	
-	def warn(self, message: str):
-		"""Sends a new message as an answer to the original message with
-		some warning message. The minimum time between two consecutive
-		warning messages is specified by the <minimum_warn_time_seconds>
-		parameter in the __init__ method. If multiple calls to self.warn
-		are performed in less than <minimum_warn_time_seconds> the messages
-		are stored and dispatched later on all together in a single message. 
-		This avoids spamming the Telegram account and avoids the bot being
-		blocked by Telegram for "inhuman behavior".
-		Raises TypeError if <message> is not a string."""
-		if self._within_context == False:
+	def warn(self, message:str):
+		"""Send a warning to the Telegram chat. The difference between this
+		and just sending a message is that this method automatically replies
+		to the original message that is reporting the loop and also moderates
+		the number of warnings per unit time that can be sent to the chat,
+		so if a warning is reported many times in a loop (say 100 times in
+		one second) this method will collect them all in a single message
+		and send that instead of 100 messages.
+		
+		Arguments
+		---------
+		message: str
+			Warning message.
+		"""
+		if self._now_reporting == False:
 			raise RuntimeError(f'This method must be called from inside a context, i.e. inside a `with` statement.')
-		if not isinstance(message, str):
-			raise TypeError(f'<message> must be a string, received an object of type {type(message)}.')
 		if not hasattr(self, '_accumulated_warnings'):
 			self._accumulated_warnings = {}
 		if message not in self._accumulated_warnings:
@@ -263,17 +284,23 @@ class TelegramProgressReporter(TelegramReporter):
 			self._accumulated_warnings[message] += 1 # Increase the count for this type of warning, in case it is reported multiple times within the "minimum warn time".
 		self._send_warnings()
 		
-	def _send_warnings(self):
+	def _send_warnings(self, force:bool=False):
 		"""This method handles all the bureaucracy of actually sending 
 		the warnings to the Telegram bot, taking care of waiting the 
 		correct amount of time, collect all the warnings that are waiting
-		and of writing a nice message."""
-		if not hasattr(self, '_accumulated_warnings') or self._accumulated_warnings == {}: # Nothing to send...
+		and of writing a nice message.
+		
+		Arguments
+		---------
+		force: bool, default False
+			Force sending the warnings no matter if they will spam the chat.
+		"""
+		if not hasattr(self, '_accumulated_warnings') or len(self._accumulated_warnings) == 0: # Nothing to send...
 			return
-		if not hasattr(self, '_last_warn'):
-			self._last_warn = datetime.datetime.now() - 2*self._minimum_warn_time # Initialize it like this so the first warning is instantly sent.
-		if datetime.datetime.now() - self._last_warn >= self._minimum_warn_time: # Send warnings.
-			self._last_warn = datetime.datetime.now()
+		if not hasattr(self, '_last_warn_time'):
+			self._last_warn_time = datetime.datetime.now() - 2*self._minimum_warn_time # Initialize it like this so the first warning is instantly sent.
+		if datetime.datetime.now() - self._last_warn_time >= self._minimum_warn_time or force==True: # Send warnings.
+			self._last_warn_time = datetime.datetime.now()
 			if len(self._accumulated_warnings) == 1: # There is only a single warning to show, print a simple message easy to read.
 				message2send = list(self._accumulated_warnings.keys())[0] # This is the message of the warning.
 				if self._accumulated_warnings[message2send] > 1: # This means that the warning was "raised" multiple times. We have to inform this!
@@ -285,15 +312,13 @@ class TelegramProgressReporter(TelegramReporter):
 					message2send += msg
 					if count > 1:
 						message2send += f'\nThis warning happened {count} times.'
-			if not hasattr(self, '_message_id'): # This means that the original message was not yet sent. We just wait, sooner or later it will be sent. And we cannot do anything anyway...
+			if not hasattr(self, '_message_id_reporting_loop_progress'): # This means that the original message was not yet sent. We just wait, sooner or later it will be sent. And we cannot do anything anyway...
 				return
 			try:
 				self.send_message(
-					message_text = message2send,
-					reply_to_message_id = self._message_id,
+					text = message2send,
+					reply_to_message_id = self._message_id_reporting_loop_progress,
 				)
 				self._accumulated_warnings = {} # Delete all warnings after having sent them.
-			except KeyboardInterrupt:
-				raise KeyboardInterrupt()
 			except Exception as e:
 				warnings.warn(f'Could not establish connection with Telegram to send the warnings. Reason: {repr(e)}')
