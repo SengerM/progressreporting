@@ -131,6 +131,23 @@ class SafeTelegramReporter4Loops(SafeTelegramReporter):
 		self._minimum_warn_time = datetime.timedelta(seconds=minimum_warn_time_seconds)
 		return self
 	
+	def create_subloop_reporter(self):
+		"""Creates a new instance of `SafeTelegramReporter4Loops` which
+		is tied to the current instance in the sense that all its messages
+		will by default answer to the current loop reporting message.
+		"""
+		if not self._now_reporting:
+			raise RuntimeError('You can only report a subloop if you are already reporting a loop!')
+		default_params = dict(self._default_parameters)
+		default_params.pop('reply_to_message_id',None) # If the current instance was already replying to some message, because e.g. it is already a subloop reporter, remove this!
+		subreporter = SafeTelegramReporter4Loops(
+			bot_token = self._bot_token,
+			chat_id = self._chat_id,
+			reply_to_message_id = self._message_id_reporting_loop_progress,
+			**default_params,
+		)
+		return subreporter
+	
 	def report_subloop(self, total_loop_iterations:int, loop_name:str=None, miminum_update_time_seconds:float=60, minimum_warn_time_seconds:float=60):
 		"""Creates a new instance of `SafeTelegramReporter4Loops` which
 		will answer to the current instance and configures it to report
@@ -146,14 +163,7 @@ class SafeTelegramReporter4Loops(SafeTelegramReporter):
 		subreporter: SafeTelegramReporter4Loops
 			A new instance that will handle the subloop.
 		"""
-		if not self._now_reporting:
-			raise RuntimeError('You can only report a subloop if you are already reporting a loop!')
-		subreporter = SafeTelegramReporter4Loops(
-			bot_token = self._bot_token,
-			chat_id = self._chat_id,
-			reply_to_message_id = self._message_id_reporting_loop_progress if hasattr(self, '_message_id_reporting_loop_progress') else None,
-			**self._default_parameters,
-		)
+		subreporter = self.create_subloop_reporter()
 		subreporter.report_loop(
 			total_loop_iterations = total_loop_iterations, 
 			loop_name = loop_name, 
